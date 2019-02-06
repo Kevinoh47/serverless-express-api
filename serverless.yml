@@ -1,0 +1,66 @@
+service: serverless-express-api
+
+custom:
+  usersTableName: 'users-table-${self:provider.stage}'
+  messagesTableName: 'messages-table-${self:provider.stage}'
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - { "Fn::GetAtt":["UsersDynamoDBTable", "Arn"]}
+        - { "Fn::GetAtt":["MessagesDynamoDBTable", "Arn"]}
+  environment:
+    USERS_TABLE: ${self:custom.usersTableName}
+    MESSAGES_TABLE: ${self:custom.messagesTableName}
+
+functions:
+  app:
+    handler: index.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+
+resources:
+  Resources:
+    MessagesDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: messageId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: messageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.messagesTableName}
+    UsersDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.usersTableName}
