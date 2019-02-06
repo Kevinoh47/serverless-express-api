@@ -15,6 +15,30 @@ app.get('/', function (req, res) {
   res.send('<h2>Hello World! Test Express Server</h2>');
 })
 
+// Get Chat endpoint
+app.get('/chat', function(req, res){
+  const params = {
+    TableName: MESSAGES_TABLE,
+    Key: {
+      messageId: req.params.messageId,
+    },
+  }
+
+  dynamoDb.scan(params, (error,result) => {
+    if (error) {
+      console.log(error);
+      res.status(400).json({ error: error});
+    }
+    if (result) {
+      console.log({result})
+      // const {messageId, timestamp, message, moniker, room} = result.Item;
+      // res.json( { messageId, timestamp, message, moniker, room });
+    } else {
+      res.status(404).json( { error: "chat messages not found", result: result });
+    }
+  });
+})
+
 // Get Messages endpoint
 app.get('/messages/:messageId', function(req, res){
   const params = {
