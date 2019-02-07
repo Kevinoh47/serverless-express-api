@@ -15,6 +15,22 @@ app.get('/', function (req, res) {
   res.send('<h2>Hello World! Test Express Server</h2>');
 })
 
+// Get all messages:
+app.get('/history', (req, res) => {
+  const params = {
+    TableName: MESSAGES_TABLE,
+  };
+
+  dynamoDb.scan(params, (error, result) => {
+    if (error) {
+      res.status(400).json({ error: 'Error retrieving Messages history.'});
+    }
+    console.log({result})
+    const { Items: messages } = result;
+    res.json({ messages });
+  })
+});
+
 // Get Messages endpoint
 app.get('/messages/:messageId', function(req, res){
   const params = {
